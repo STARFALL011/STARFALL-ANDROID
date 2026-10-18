@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -41,15 +40,15 @@ jobs:
 
       - name: Check project files
         run: |
-          echo "Checking required files..."
+          echo "Checking STARFALL project..."
           test -f package.json
-          test -f capacitor.config.json -o -f capacitor.config.ts -o -f capacitor.config.js
           test -d www
+          test -f capacitor.config.json -o -f capacitor.config.ts -o -f capacitor.config.js
 
       - name: Generate Android project
         run: npx cap add android
 
-      - name: Generate Android app icons from STARFALL logo
+      - name: Generate Android app icons
         run: npx capacitor-assets generate --android --assetPath assets
 
       - name: Sync Capacitor
@@ -64,21 +63,21 @@ jobs:
           p = Path("android/app/src/main/AndroidManifest.xml")
           s = p.read_text()
 
-          additions = [
-              '<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
-              '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
-              '<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />',
-              '<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />'
+          permissions = [
+              'android.permission.ACCESS_COARSE_LOCATION',
+              'android.permission.ACCESS_FINE_LOCATION',
+              'android.permission.READ_MEDIA_IMAGES',
+              'android.permission.READ_EXTERNAL_STORAGE'
           ]
 
-          for permission in additions:
-              name = permission.split('"')[1]
-              if name not in s:
-                  s = s.replace(
-                      '<application',
-                      f'    {permission}\n    <application',
-                      1
-                  )
+          for permission in permissions:
+              if permission == 'android.permission.READ_EXTERNAL_STORAGE':
+                  entry = f'<uses-permission android:name="{permission}" android:maxSdkVersion="32" />'
+              else:
+                  entry = f'<uses-permission android:name="{permission}" />'
+
+              if permission not in s:
+                  s = s.replace('<application', f'    {entry}\n    <application', 1)
 
           p.write_text(s)
           PY
