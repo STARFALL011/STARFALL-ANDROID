@@ -1,0 +1,68 @@
+name: Build STARFALL APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Android project
+        run: npx cap add android
+      - name: Generate Android app icons from STARFALL logo
+        run: npx capacitor-assets generate --android --assetPath assets
+      - name: Sync Capacitor
+        run: npx cap sync android
+      - name: Add Android permissions
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          additions = """<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+          <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+          <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+          <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />"""
+          if 'android.permission.ACCESS_FINE_LOCATION' not in s:
+              s = s.replace('<application', additions + '\n    <application', 1)
+          p.write_text(s)
+          PY
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Prepare APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/STARFALL.apk
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: STARFALL-APK
+          path: release/STARFALL.apk
+          if-no-files-found: error
+          retention-days: 14

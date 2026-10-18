@@ -1,0 +1,13 @@
+STARFALL ANDROID SETUP
+
+NILAGAY NA:
+- Capacitor configuration para sa Android wrapper
+- GitHub Actions workflow na gagawa ng Android project sa runner at magbu-build ng debug APK
+- STARFALL logo assets para sa app icon/splash generation
+- Location permission declarations at runtime request sa native app
+
+MAHALAGANG TANDAAN:
+- Ang Photos at Files access sa modern Android ay pinakamainam gamitin sa pamamagitan ng Android system Photo Picker / file picker. Hindi kailangan at hindi ligtas na humingi ng malawak na access sa lahat ng files para lang pumili ng larawan o file.
+- Ang current game ay HTML/CSS/JS; nasa www/ ang copy na ise-serve ng Capacitor. Panatilihin ding updated ang root files kapag binago ang game, pagkatapos kopyahin muli sa www/.
+- GitHub Actions builds debug APK, hindi Play Store signed release.
+- Pag-upload, palitan ang default branch sa main kung ibang branch ang ginagamit, o baguhin ang workflow trigger branches.
